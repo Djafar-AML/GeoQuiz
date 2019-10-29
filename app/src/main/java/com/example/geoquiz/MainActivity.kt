@@ -26,26 +26,54 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         binding.trueButton.setOnClickListener {
-            checkAnswer(true)
+            checkAnswer(userAnswer = true)
         }
         
         binding.falseButton.setOnClickListener {
-            checkAnswer(false)
+            checkAnswer(userAnswer = false)
         }
         
-        updateQuestion()
+        updateQuestion(startCall = true)
         
-        binding.nextButton.setOnClickListener {
+        binding.nextImgButton.setOnClickListener {
             
-            currentIndex = (currentIndex + 1) % questionBanks.size
             updateQuestion()
             
         }
+        
+        binding.backImgButton.setOnClickListener {
+            
+            updateQuestion(true)
+            
+        }
+        
+        binding.questionTextView.setOnClickListener {
+            
+            updateQuestion()
+        }
     }
     
-    private fun updateQuestion() {
+    private fun updateQuestion(back : Boolean = false , startCall : Boolean = false) {
         
-        val questionTextResId = questionBanks[currentIndex].textResId
+        currentIndex = if (back) {
+            if (currentIndex <= 0) {
+                (questionBanks.size - 1)
+            }
+            else {
+                (currentIndex - 1) % questionBanks.size
+            }
+        }
+        else {
+            (currentIndex + 1) % questionBanks.size
+        }
+        
+        val questionTextResId = if (startCall) {
+            questionBanks[0].textResId
+        }
+        else {
+            questionBanks[currentIndex].textResId
+        }
+        
         binding.questionTextView.setText(questionTextResId)
         
     }
