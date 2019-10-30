@@ -1,30 +1,39 @@
 package com.example.geoquiz
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
+import com.example.geoquiz.QuizViewModel.QuizViewModelFactory
 import com.example.geoquiz.databinding.ActivityMainBinding
-import com.example.geoquiz.model.Question
+
+private const val TAG = "MainActivity"
+private const val KEY_INDEX = "index"
 
 class MainActivity : AppCompatActivity() {
+    
     private val binding by lazy {
         DataBindingUtil.setContentView(this , R.layout.activity_main) as ActivityMainBinding
     }
     
-    private val questionBanks = listOf(
-                    Question(R.string.question_australia , true) ,
-                    Question(R.string.question_oceans , true) ,
-                    Question(R.string.question_mideast , false) ,
-                    Question(R.string.question_africa , false) ,
-                    Question(R.string.question_americas , true) ,
-                    Question(R.string.question_asia , true))
     
-    private var currentIndex = 0
+    private val quizViewModel by lazy {
+        ViewModelProvider(this , QuizViewModelFactory()).get(QuizViewModel::class.java)
+    }
     
     override fun onCreate(savedInstanceState : Bundle?) {
         super.onCreate(savedInstanceState)
         
+        //get viewModel
+        Log.d(TAG , "Got a QuizViewModel: $quizViewModel")
+        
+        // getting saved state of viewModel!
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX , 0) ?: 0
+        quizViewModel.currentIndex = currentIndex
+        
+        // buttons
         binding.trueButton.setOnClickListener {
             checkAnswer(userAnswer = true)
         }
@@ -32,47 +41,36 @@ class MainActivity : AppCompatActivity() {
         binding.falseButton.setOnClickListener {
             checkAnswer(userAnswer = false)
         }
-        
-        updateQuestion(startCall = true)
+
+//        quizViewModel.moveToAnotherQuestion()
+        updateQuestion()
         
         binding.nextImgButton.setOnClickListener {
             
+            quizViewModel.moveToAnotherQuestion()
             updateQuestion()
             
         }
         
         binding.backImgButton.setOnClickListener {
             
-            updateQuestion(true)
+            quizViewModel.moveToAnotherQuestion(true)
+            updateQuestion()
             
         }
         
         binding.questionTextView.setOnClickListener {
             
+            quizViewModel.moveToAnotherQuestion()
             updateQuestion()
         }
     }
     
-    private fun updateQuestion(back : Boolean = false , startCall : Boolean = false) {
+    
+    private fun updateQuestion() {
         
-        currentIndex = if (back) {
-            if (currentIndex <= 0) {
-                (questionBanks.size - 1)
-            }
-            else {
-                (currentIndex - 1) % questionBanks.size
-            }
-        }
-        else {
-            (currentIndex + 1) % questionBanks.size
-        }
-        
-        val questionTextResId = if (startCall) {
-            questionBanks[0].textResId
-        }
-        else {
-            questionBanks[currentIndex].textResId
-        }
+        val questionTextResId = quizViewModel.currentQuestionText
+        Log.d("question" , questionTextResId.toString())
         
         binding.questionTextView.setText(questionTextResId)
         
@@ -80,7 +78,7 @@ class MainActivity : AppCompatActivity() {
     
     private fun checkAnswer(userAnswer : Boolean) {
         
-        val correctAnswer = questionBanks[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
         
         val messageResId = if (userAnswer == correctAnswer) {
             R.string.correct_toast
@@ -90,6 +88,13 @@ class MainActivity : AppCompatActivity() {
         }
         
         Toast.makeText(this , messageResId , Toast.LENGTH_SHORT).show()
+    }
+    
+    override fun onSaveInstanceState(outState : Bundle) {
+        super.onSaveInstanceState(outState)
+        Log.d(TAG , "onSaveInstanceState")
+        outState.putInt(KEY_INDEX , quizViewModel.currentIndex)
+        
     }
 }
 
