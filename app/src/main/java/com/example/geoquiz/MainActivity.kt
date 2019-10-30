@@ -64,12 +64,22 @@ class MainActivity : AppCompatActivity() {
             quizViewModel.moveToAnotherQuestion()
             updateQuestion()
         }
+        
+        binding.cheatButton.setOnClickListener {
+            
+            val answerIsTrue = quizViewModel.currentQuestionAnswer
+            
+            val intent = CheatActivity.newIntent(this , answerIsTrue)
+            
+            startActivity(intent)
+        }
     }
     
     
     private fun updateQuestion() {
         
         val questionTextResId = quizViewModel.currentQuestionText
+        
         Log.d("question" , questionTextResId.toString())
         
         binding.questionTextView.setText(questionTextResId)
@@ -92,6 +102,7 @@ class MainActivity : AppCompatActivity() {
     
     override fun onSaveInstanceState(outState : Bundle) {
         super.onSaveInstanceState(outState)
+        
         Log.d(TAG , "onSaveInstanceState")
         outState.putInt(KEY_INDEX , quizViewModel.currentIndex)
         
